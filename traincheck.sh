@@ -25,6 +25,7 @@ RETURNDIRECTIONS="Treysa|Dillenburg|Hannover|Giessen|Marburg|Siegen"
 MINDELAYWARNING=5 # Minimum Delay for a warning in minutes
 PRODUCTMASK=110100000 # Use ICE, IC and Regional Trains only...
 PROWLKEY="" # API-Key for prowlapp.com. If set you will receive a push notification for delayed trains
+NOTIFICATIONMAIL=true
 
 ### ZUGCHECK SCRIPT ###
 
@@ -84,7 +85,9 @@ while read line; do
 done < $ZUGCHECKHOME/mytrains.xml
 
 # MAKE SURE THAT YOUR MAILER IS CONFIGURED PROPERLY!
-mailer -s "Aktueller Zugcheck" -i $ZUGCHECKHOME/traincheck.log -r
+if $NOTIFICATIONMAIL; then 
+    mailer -s "Aktueller Zugcheck" -i $ZUGCHECKHOME/traincheck.log -r
+fi
 
 # CLEAN UP
 rm $ZUGCHECKHOME/forward.txt
