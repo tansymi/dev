@@ -24,6 +24,7 @@ RETURNSTATIONID="8000105"
 RETURNDIRECTIONS="Treysa|Dillenburg|Hannover|Giessen|Marburg|Siegen"
 MINDELAYWARNING=5 # Minimum Delay for a warning in minutes
 PRODUCTMASK=110100000 # Use ICE, IC and Regional Trains only...
+PROWLKEY="" # API-Key for prowlapp.com. If set you will receive a push notification for delayed trains
 
 ### ZUGCHECK SCRIPT ###
 
@@ -53,6 +54,7 @@ unset time
 unset reason
 unset target
 unset platform
+unset message
 
 while read line; do
      delay=`echo $line | sed -rn 's/.* e_delay=\"([0-9]+)\".*/\1/p'`
@@ -65,9 +67,16 @@ while read line; do
 
      if [ $delay -gt $MINDELAYWARNING ]
        then 
-         echo "Zug von $from nach $target ($train um $time Uhr von Gleis $platform) hat $delay Minute(n) Verspaetung! Grund: $reason" >> $ZUGCHECKHOME/traincheck.log
+         message =  "Zug von $from nach $target ($train um $time Uhr von Gleis $platform) hat $delay Minute(n) Verspaetung! Grund: $reason"
+         echo $message >> $ZUGCHECKHOME/traincheck.log
          # DELAY FOUND - SWITCH ON THE LED!
          /bin/led-ctrl filesystem_mount_failure
+         # AND PUSH NOTIFICATION TO PROWL
+         if [ -n "$PROWLKEY" ]; then
+            urlmessage = $(echo "$message" | sed -e 's/%/%25/g' -e 's/ /%20/g' -e 's/!/%21/g' -e 's/"/%22/g' -e 's/#/%23/g' -e 's/\$/%24/g' -e 's/\&/%26/g' -e 's/'\''/%27/g' -e 's/(/%28/g' -e 's/)/%29/g' -e 's/\*/%2a/g' -e 's/+/%2b/g' -e 's/,/%2c/g' -e 's/-/%2d/g' -e 's/\./%2e/g' -e 's/\//%2f/g' -e 's/:/%3a/g' -e 's/;/%3b/g' -e 's//%3e/g' -e 's/?/%3f/g' -e 's/@/%40/g' -e 's/\[/%5b/g' -e 's/\\/%5c/g' -e 's/\]/%5d/g' -e 's/\^/%5e/g' -e 's/_/%5f/g' -e 's/`/%60/g' -e 's/{/%7b/g' -e 's/|/%7c/g' -e 's/}/%7d/g' -e 's/~/%7e/g')
+            echo -e "GET http://api.prowlapp.com/publicapi/add?apikey=$PROWLKEY&application=Traincheck&event=Zug%20versp%C3%A4tet&description=$urlmessage" \
+            | nc api.prowlapp.com 80 > /dev/null
+         fi
        else 
          echo "Zug von $from nach $target ($train um $time Uhr von Gleis $platform) ist puenktlich!" >> $ZUGCHECKHOME/traincheck.log
      fi
@@ -82,5 +91,3 @@ rm $ZUGCHECKHOME/forward.txt
 rm $ZUGCHECKHOME/return.txt
 
 rm $ZUGCHECKHOME/mytrains.xml
-
-
