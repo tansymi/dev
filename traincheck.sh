@@ -16,10 +16,10 @@ TRAINDATE_TOMORROW=`date +%d.%m.%Y -D %s -d $(( $(date +%s) + 86400))`
 
 # CONFIGURATION SECTION
 ZUGCHECKHOME="/var/InternerSpeicher/USBDISK2-0-00"
-FORWARDSTATION="Giessen"
+FORWARDSTATION=\"Giessen\"
 FORWARDSTATIONID="8000124"
 FORWARDDIRECTIONS="Frankfurt|Karlsruhe|Darmstadt"
-RETURNSTATION="Frankfurt"
+RETURNSTATION=\"Frankfurt\"
 RETURNSTATIONID="8000105"
 RETURNDIRECTIONS="Treysa|Dillenburg|Hannover|Giessen|Marburg|Siegen"
 MINDELAYWARNING=5 # Minimum Delay for a warning in minutes
@@ -44,9 +44,9 @@ echo -e "GET http://reiseauskunft.bahn.de/bin/bhftafel.exe/dn?productsFilter=$PR
 touch $ZUGCHECKHOME/traincheck.log
 rm $ZUGCHECKHOME/traincheck.log
 
-sed -e 's/<\/Journey>/ from=$FORWARDSTATION end <\/Journey>\n/g' $ZUGCHECKHOME/forward.txt | egrep $FORWARDDIRECTIONS \
+sed -e "s/><\/Journey>/\ from=$FORWARDSTATION end ><\/Journey>\n/g" $ZUGCHECKHOME/forward.txt | egrep $FORWARDDIRECTIONS \
  >> $ZUGCHECKHOME/mytrains.xml
-sed -e 's/<\/Journey>/ from=$RETURNSTATION end <\/Journey>\n/g' $ZUGCHECKHOME/return.txt | egrep $RETURNDIRECTIONS \
+sed -e "s/><\/Journey>/\ from=$RETURNSTATION end ><\/Journey>\n/g" $ZUGCHECKHOME/return.txt | egrep $RETURNDIRECTIONS \
  >> $ZUGCHECKHOME/mytrains.xml
 
 unset delay
@@ -56,6 +56,7 @@ unset reason
 unset target
 unset platform
 unset message
+unset from
 
 while read line; do
      delay=`echo $line | sed -rn 's/.* e_delay=\"([0-9]+)\".*/\1/p'`
